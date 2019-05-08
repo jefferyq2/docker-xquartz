@@ -41,3 +41,48 @@ sudo sh ./install.sh
 sudo sh ./uninstall.sh
 ```
 
+# Docker run script
+
+Now if you want to add X11 functionality to your docker image.
+It of course needs to be an X11 docker image :-)
+
+but you should also add the following to your docker image startup script:
+
+(Just an example Tested on macOs) 
+```bash
+# Adding the ip to the xhost
+ip=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
+xhost + $ip
+
+# If audio is also wanted for your X11 app (pulseaudio)
+[[ -z "$(brew ls --versions pulseaudio)" ]] && brew install pulseaudio
+killall pulseaudio 2>/dev/null
+pulseaudio --load=module-native-protocol-tcp --exit-idle-time=-1 --daemon 2>/dev/null
+
+docker run                                            \
+    -d                                                \
+    --rm                                              \
+    -v /tmp/.X11-unix:/tmp/.X11-unix                  \
+    -e DISPLAY=$ip:0                                  \
+    -e PULSE_SERVER=docker.for.mac.localhost          \ 
+    -v ~/.config/pulse:/nobody/.config/pulse          \
+    ivonet/x11-chrome
+    if [ "$?" != 0 ]; then
+        echo "you might want to see if the XQaurtz is still correctly configured. See http://ivo2u.nl/oB."
+    fi
+
+```
+
+These two lines enable the X11 stuff. Note that the $ip is gathered above in the script
+
+```bash
+    -v /tmp/.X11-unix:/tmp/.X11-unix                  \
+    -e DISPLAY=$ip:0                                  \
+```
+
+These two lines enable the audio
+
+```bash
+    -e PULSE_SERVER=docker.for.mac.localhost          \ 
+    -v ~/.config/pulse:/nobody/.config/pulse          \
+```
