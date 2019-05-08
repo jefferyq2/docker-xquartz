@@ -13,6 +13,7 @@ then
     exit 1
 fi
 echo "Installing socat launch deamon for X11"
+cd `dirname $0`
 source=ivonet.socat.x11.listener.plist
 target=/Library/LaunchDaemons/ivonet.socat.x11.listener.plist
 
